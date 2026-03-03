@@ -4,145 +4,163 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KinNom Bakery</title>
-
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
-body{
-    background:#f6efe6;
-    font-family: 'Segoe UI', sans-serif;
-}
-.navbar{
-    background:#8b5e3c;
-}
-.navbar-brand{
-    color:#fff;
-    font-weight:bold;
-}
-.card{
-    border:none;
-    border-radius:20px;
-    box-shadow:0 5px 15px rgba(0,0,0,0.08);
-}
-.btn-main{
-    background:#a67c52;
-    color:#fff;
-    border-radius:30px;
-}
-.btn-main:hover{
-    background:#8b5e3c;
-}
-.price{
-    color:#8b5e3c;
-    font-weight:bold;
-}
+body{background:#f6efe6;}
+.navbar{background:#8b5e3c;}
+.navbar-brand{color:white;font-weight:bold;}
+.card{border:none;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+.btn-main{background:#a67c52;color:white;border-radius:30px;}
+.price{color:#8b5e3c;font-weight:bold;}
 </style>
 </head>
-
 <body>
 
 <nav class="navbar p-3">
-  <div class="container">
-    <span class="navbar-brand">🍰 KinNom Bakery</span>
-  </div>
+<div class="container">
+<span class="navbar-brand">🍰 KinNom Bakery</span>
+</div>
 </nav>
 
 <div class="container mt-4">
 
-  <div class="row g-3">
+<h5>เมนูสินค้า</h5>
 
-    <!-- Banana Muffin -->
-    <div class="col-12">
-      <div class="card p-3">
-        <h5>Banana Muffin (4 ชิ้น)</h5>
-        <div class="price">฿110</div>
-        <button class="btn btn-main mt-2" onclick="selectProduct('Banana Muffin (4 pcs)',110)">
-          เลือก
-        </button>
-      </div>
-    </div>
+<div id="menuList"></div>
 
-    <!-- Chiffon Cake -->
-    <div class="col-12">
-      <div class="card p-3">
-        <h5>ชิฟฟ่อนเค้ก มะพร้าวอ่อนลาวา</h5>
-        <div class="price">฿30 / ชิ้น</div>
-        <button class="btn btn-main mt-2" onclick="selectProduct('ชิฟฟ่อนเค้ก',30)">
-          เลือก
-        </button>
-      </div>
-    </div>
+<div class="card p-3 mt-4">
+<h5>🧺 ตะกร้า</h5>
+<ul id="cartList"></ul>
+<div class="price" id="total">รวม ฿0</div>
 
-  </div>
+<input class="form-control mt-2" id="name" placeholder="ชื่อ">
+<input class="form-control mt-2" id="phone" placeholder="เบอร์โทร">
 
-  <!-- Cart -->
-  <div class="card p-3 mt-4" id="orderBox" style="display:none;">
-    <h5>🧺 ตะกร้าของฉัน</h5>
+<button class="btn btn-main w-100 mt-3" onclick="submitOrder()">สั่งสินค้า</button>
+</div>
 
-    <div id="selectedProduct"></div>
-    <div class="price" id="totalPrice"></div>
+<hr class="my-4">
 
-    <input type="text" id="name" class="form-control mt-2" placeholder="ชื่อ">
-    <input type="text" id="phone" class="form-control mt-2" placeholder="เบอร์โทร">
-    <input type="number" id="qty" class="form-control mt-2" placeholder="จำนวน" value="1" min="1">
-    <textarea id="note" class="form-control mt-2" placeholder="หมายเหตุ"></textarea>
+<h5>เช็คสถานะออเดอร์</h5>
+<input class="form-control mt-2" id="checkPhone" placeholder="เบอร์โทร">
+<button class="btn btn-main mt-2" onclick="checkStatus()">ตรวจสอบ</button>
+<ul id="statusResult" class="mt-3"></ul>
 
-    <button class="btn btn-main w-100 mt-3" onclick="submitOrder()">
-      สั่งสินค้า
-    </button>
-  </div>
+<hr class="my-4">
+
+<h5>👩‍🍳 แอดมิน (เปลี่ยนสถานะ)</h5>
+<input class="form-control mt-2" id="adminId" placeholder="Order ID">
+<select class="form-control mt-2" id="adminStatus">
+<option>รอทำ</option>
+<option>กำลังอบ</option>
+<option>พร้อมรับ</option>
+<option>ส่งแล้ว</option>
+</select>
+<button class="btn btn-main mt-2" onclick="updateStatus()">อัปเดต</button>
 
 </div>
 
 <script>
 
-let currentProduct = "";
-let currentPrice = 0;
+const API_URL = "https://script.google.com/macros/s/AKfycbwVDqvwV1gj2JHQ2LvaNsI8sJtAt3jFroysGcxnIha8DsD5aKLEhcopHjzNn0FJUZOUvQ/exec";
 
-function selectProduct(name, price){
-    currentProduct = name;
-    currentPrice = price;
+const products = [
+  {name:"Banana Muffin (4 ชิ้น)",price:110},
+  {name:"ชิฟฟ่อนเค้ก มะพร้าวอ่อนลาวา",price:30},
+  {name:"Butter Cookies 319ml",price:99},
+  {name:"Butter Cookies 419ml",price:129}
+];
 
-    document.getElementById("orderBox").style.display = "block";
-    document.getElementById("selectedProduct").innerText = name;
-    updateTotal();
+let cart=[];
+let total=0;
+
+function renderMenu(){
+  let html="";
+  products.forEach((p,i)=>{
+    html+=`
+    <div class="card p-3 mt-2">
+      <h6>${p.name}</h6>
+      <div class="price">฿${p.price}</div>
+      จำนวน:
+      <input type="number" min="1" value="1" id="qty${i}" class="form-control mt-1">
+      <button class="btn btn-main mt-2" onclick="addToCart(${i})">เพิ่ม</button>
+    </div>
+    `;
+  });
+  document.getElementById("menuList").innerHTML=html;
+}
+renderMenu();
+
+function addToCart(index){
+  let qty=parseInt(document.getElementById("qty"+index).value);
+  let product=products[index];
+
+  cart.push({
+    name:product.name,
+    price:product.price,
+    qty:qty
+  });
+
+  total+=product.price*qty;
+  renderCart();
 }
 
-document.getElementById("qty")?.addEventListener("input", updateTotal);
+function renderCart(){
+  let html="";
+  cart.forEach((item,i)=>{
+    html+=`
+    <li>
+    ${item.name} x ${item.qty} = ฿${item.price*item.qty}
+    <button onclick="removeItem(${i})">❌</button>
+    </li>`;
+  });
+  document.getElementById("cartList").innerHTML=html;
+  document.getElementById("total").innerText="รวม ฿"+total;
+}
 
-function updateTotal(){
-    let qty = document.getElementById("qty").value || 1;
-    let total = qty * currentPrice;
-    document.getElementById("totalPrice").innerText = "รวม ฿" + total;
+function removeItem(i){
+  total-=cart[i].price*cart[i].qty;
+  cart.splice(i,1);
+  renderCart();
 }
 
 function submitOrder(){
+  if(cart.length===0){alert("กรุณาเลือกสินค้า");return;}
 
-    let data = {
-        customer_name: document.getElementById("name").value,
-        phone: document.getElementById("phone").value,
-        product: currentProduct,
-        qty: document.getElementById("qty").value,
-        note: document.getElementById("note").value
-    };
+  let data={
+    name:document.getElementById("name").value,
+    phone:document.getElementById("phone").value,
+    items:cart,
+    total:total
+  };
 
-    if(!data.customer_name || !data.phone){
-        alert("กรุณากรอกชื่อและเบอร์โทร");
-        return;
-    }
+  fetch(API_URL,{method:"POST",body:JSON.stringify(data)})
+  .then(res=>res.json())
+  .then(()=>{alert("สั่งซื้อสำเร็จ 🎉");location.reload();});
+}
 
-    fetch("https://script.google.com/macros/s/AKfycbzIIevCl5ZptIfbjhBzfs6JIyMiWk-z60TDD8q3wS4N3gcCNvOp8OiL2eNFFVbDa78U/exec", {
-        method: "POST",
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(res => {
-        alert("สั่งซื้อสำเร็จ 🎉");
-        location.reload();
-    })
-    .catch(err => {
-        alert("เกิดข้อผิดพลาด กรุณาลองใหม่");
+function checkStatus(){
+  let phone=document.getElementById("checkPhone").value;
+
+  fetch(API_URL+"?action=check&phone="+phone)
+  .then(res=>res.json())
+  .then(data=>{
+    let html="";
+    data.forEach(order=>{
+      html+=`<li>Order #${order.id} - ${order.status} - ฿${order.total}</li>`;
     });
+    document.getElementById("statusResult").innerHTML=html;
+  });
+}
+
+function updateStatus(){
+  let id=document.getElementById("adminId").value;
+  let status=document.getElementById("adminStatus").value;
+
+  fetch(API_URL+`?action=update&id=${id}&status=${status}`)
+  .then(res=>res.json())
+  .then(()=>alert("อัปเดตแล้ว"));
 }
 
 </script>
