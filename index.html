@@ -126,20 +126,32 @@ function removeItem(i){
 }
 
 function submitOrder(){
-  if(cart.length===0){alert("กรุณาเลือกสินค้า");return;}
 
-  let data={
-    name:document.getElementById("name").value,
-    phone:document.getElementById("phone").value,
-    items:cart,
-    total:total
-  };
+  if(cart.length===0){
+    alert("กรุณาเลือกสินค้า");
+    return;
+  }
 
-  fetch(API_URL,{method:"POST",body:JSON.stringify(data)})
-  .then(res=>res.json())
-  .then(()=>{alert("สั่งซื้อสำเร็จ 🎉");location.reload();});
+  let formData = new FormData();
+  formData.append("name", document.getElementById("name").value);
+  formData.append("phone", document.getElementById("phone").value);
+  formData.append("items", JSON.stringify(cart));
+  formData.append("total", total);
+
+  fetch(API_URL,{
+    method:"POST",
+    body:formData
+  })
+  .then(res=>res.text())
+  .then(()=>{
+    alert("สั่งซื้อสำเร็จ 🎉");
+    location.reload();
+  })
+  .catch(()=>{
+    alert("เกิดข้อผิดพลาด");
+  });
 }
-
+  
 function checkStatus(){
   let phone=document.getElementById("checkPhone").value;
 
@@ -167,5 +179,6 @@ function updateStatus(){
 
 </body>
 </html>
+
 
 
