@@ -147,8 +147,11 @@ function submitOrder(){
   formData.append("items", JSON.stringify(cart));
   formData.append("total", total);
 
-  fetch(API_URL,{method:"POST",body:formData})
-  .then(res=>res.text())
+  fetch(API_URL,{
+    method:"POST",
+    mode:"no-cors",
+    body:formData
+  })
   .then(()=>{
     showToast("สั่งซื้อสำเร็จ 🎉","success");
 
@@ -211,7 +214,8 @@ function showToast(message,type="success"){
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
+
+<script>
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js")
     .then(() => console.log("Service Worker Registered"));
@@ -220,5 +224,3 @@ if ("serviceWorker" in navigator) {
 
 </body>
 </html>
-
-
