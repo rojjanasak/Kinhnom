@@ -1,11 +1,14 @@
-const CACHE_NAME = "kinnom-cache-v1";
+const CACHE_NAME = "kinnom-cache-v2";
+
 const urlsToCache = [
-  "index.html",
-  "manifest.json",
-  "icon-192.png",
-  "icon-512.png"
+  "./",
+  "./index.html",
+  "./manifest.json",
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
+// install
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -13,11 +16,18 @@ self.addEventListener("install", event => {
   );
 });
 
+// fetch
 self.addEventListener("fetch", event => {
+
+  const requestURL = new URL(event.request.url);
+
+  // ❗ สำคัญมาก: ถ้าเป็น Google Script API → ไม่ต้อง cache
+  if (requestURL.origin !== location.origin) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
-      .then(response => {
-        return response || fetch(event.request);
-      })
+      .then(response => response || fetch(event.request))
   );
 });
