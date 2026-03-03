@@ -1,10 +1,11 @@
 {
-  "name": "Bakery Order",
-  "short_name": "Bakery",
+  "name": "KinNom Bakery",
+  "short_name": "KinNom",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffb6c1",
+  "background_color": "#f6efe6",
+  "theme_color": "#8b5e3c",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "icon-192.png",
