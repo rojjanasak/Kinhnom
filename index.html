@@ -1,43 +1,192 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>สั่งเบเกอรี่</title>
+<title>Kinhom Homemade Bakery</title>
 
 <link rel="manifest" href="manifest.json">
-<script>
-const API_URL = "ใส่ URL Apps Script ตรงนี้";
 
-function sendOrder(){
-  fetch(API_URL,{
-    method:"POST",
-    body:JSON.stringify({
-      customer_name:document.getElementById("name").value,
-      phone:document.getElementById("phone").value,
-      product:document.getElementById("product").value,
-      qty:document.getElementById("qty").value,
-      note:document.getElementById("note").value
-    })
-  }).then(r=>r.json())
-    .then(d=>{
-      alert("สั่งสำเร็จ!");
-    });
+<style>
+body{
+  margin:0;
+  font-family: 'Segoe UI', sans-serif;
+  background:#f6efe7;
+  color:#4b2e2e;
 }
-</script>
+
+header{
+  text-align:center;
+  padding:30px 20px;
+  background:#f3e4d7;
+  font-size:28px;
+  font-weight:bold;
+}
+
+.container{
+  max-width:800px;
+  margin:auto;
+  padding:20px;
+}
+
+.card{
+  background:white;
+  border-radius:20px;
+  padding:20px;
+  margin-bottom:20px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.05);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.card h3{
+  margin:0 0 5px 0;
+}
+
+.card button{
+  background:#d7b899;
+  border:none;
+  padding:10px 20px;
+  border-radius:20px;
+  cursor:pointer;
+}
+
+.card button:hover{
+  background:#c89c73;
+}
+
+.cart{
+  background:#fff7ef;
+  padding:20px;
+  border-radius:20px;
+  margin-top:30px;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:10px;
+  border:1px solid #ccc;
+}
+
+.order-btn{
+  width:100%;
+  padding:15px;
+  border:none;
+  background:#c89c73;
+  color:white;
+  font-size:16px;
+  border-radius:20px;
+  cursor:pointer;
+}
+
+.order-btn:hover{
+  background:#b5835a;
+}
+
+.total{
+  font-weight:bold;
+  margin-bottom:10px;
+}
+</style>
 </head>
 <body>
 
-<h2>สั่งเบเกอรี่</h2>
+<header>
+🍰 Kinhom Homemade Bakery
+</header>
 
-<input id="name" placeholder="ชื่อ"><br>
-<input id="phone" placeholder="เบอร์โทร"><br>
-<input id="product" placeholder="สินค้า"><br>
-<input id="qty" type="number" placeholder="จำนวน"><br>
-<input id="note" placeholder="หมายเหตุ"><br>
-<button onclick="sendOrder()">สั่งสินค้า</button>
+<div class="container">
+
+<div class="card">
+<div>
+<h3>Butter Cookies</h3>
+<p>฿99</p>
+</div>
+<button onclick="selectProduct('Butter Cookies',99)">เลือก</button>
+</div>
+
+<div class="card">
+<div>
+<h3>Banana Muffin (4 pcs)</h3>
+<p>฿110</p>
+</div>
+<button onclick="selectProduct('Banana Muffin (4 pcs)',110)">เลือก</button>
+</div>
+
+<div class="card">
+<div>
+<h3>Chiffon Cake</h3>
+<p>฿30</p>
+</div>
+<button onclick="selectProduct('Chiffon Cake',30)">เลือก</button>
+</div>
+
+<div class="cart">
+<h3>🧺 ตะกร้าของฉัน</h3>
+<div id="selectedProduct">ยังไม่ได้เลือกสินค้า</div>
+<div class="total" id="totalPrice"></div>
+
+<input id="name" placeholder="ชื่อของคุณ">
+<input id="phone" placeholder="เบอร์โทร">
+<input id="qty" type="number" placeholder="จำนวน" value="1">
+<input id="note" placeholder="หมายเหตุ">
+
+<button class="order-btn" onclick="sendOrder()">สั่งสินค้า</button>
+</div>
+
+</div>
 
 <script>
+const API_URL = "https://script.google.com/macros/s/AKfycbw8AgMh_SszIU1OUjV3hO1H_pqVRHacbJGHlsZPRbhf9XEaOFsHZlqRM_L8Q7X18YC-/exec";
+
+let selectedName = "";
+let selectedPrice = 0;
+
+function selectProduct(name,price){
+  selectedName = name;
+  selectedPrice = price;
+  document.getElementById("selectedProduct").innerText = name;
+  calculateTotal();
+}
+
+document.getElementById("qty").addEventListener("input",calculateTotal);
+
+function calculateTotal(){
+  let qty = document.getElementById("qty").value || 1;
+  document.getElementById("totalPrice").innerText =
+    "รวม: ฿" + (qty * selectedPrice);
+}
+
+function sendOrder(){
+
+  if(!selectedName){
+    alert("กรุณาเลือกสินค้าก่อน");
+    return;
+  }
+
+  fetch(API_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      customer_name:document.getElementById("name").value,
+      phone:document.getElementById("phone").value,
+      product:selectedName,
+      qty:document.getElementById("qty").value,
+      note:document.getElementById("note").value
+    })
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    alert("สั่งสำเร็จ 🎉");
+  })
+  .catch(()=>{
+    alert("เกิดข้อผิดพลาด");
+  });
+}
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js');
 }
